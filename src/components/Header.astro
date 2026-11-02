@@ -111,24 +111,13 @@ const links: Array<[PageKey, string]> = [
     position: absolute;
     inset: 0;
     z-index: -1;
-    background: color-mix(in srgb, var(--bg) 82%, transparent);
-    backdrop-filter: saturate(1.4) blur(14px);
-    -webkit-backdrop-filter: saturate(1.4) blur(14px);
+    background: var(--bg);
     border-bottom: 1px solid var(--line);
-    transition: opacity 0.4s var(--ease);
   }
-  /* Variante transparente sobre el hero oscuro */
+  /* En la portada va fijo encima del hero (que ya deja hueco arriba), pero siempre opaco */
   .site-header[data-overlay] {
     position: fixed;
     inset-inline: 0;
-    color: var(--on-dark);
-  }
-  .site-header[data-overlay]:not(.is-scrolled):not(.is-open)::before {
-    opacity: 0;
-  }
-  .site-header[data-overlay].is-scrolled,
-  .site-header.is-open {
-    color: var(--ink);
   }
   .site-header.is-scrolled {
     box-shadow: 0 8px 30px -20px rgb(31 26 21 / 0.4);
@@ -232,11 +221,6 @@ const links: Array<[PageKey, string]> = [
     opacity: 1;
     background: var(--gold);
     color: var(--dark);
-  }
-  .site-header[data-overlay]:not(.is-scrolled):not(.is-open) .book {
-    --btn-bg: var(--on-dark);
-    --btn-fg: var(--dark);
-    --btn-bd: var(--on-dark);
   }
 
   .burger {
