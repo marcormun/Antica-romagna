@@ -1,0 +1,345 @@
+---
+import Icon from './Icon.astro';
+import { languages, routes, useTranslations, site, type Lang, type PageKey } from '../i18n/ui';
+
+interface Props {
+  lang: Lang;
+  page: PageKey;
+  /** Cabecera transparente sobre el hero hasta que se hace scroll. */
+  overlay?: boolean;
+}
+const { lang, page, overlay = false } = Astro.props;
+const t = useTranslations(lang);
+const r = routes[lang];
+const links: Array<[PageKey, string]> = [
+  ['home', t('nav.home')],
+  ['menu', t('nav.menu')],
+  ['contact', t('nav.contact')],
+];
+---
+
+<header class="site-header" data-header data-overlay={overlay ? '' : undefined}>
+  <div class="container bar">
+    <a class="brand" href={r.home} aria-label={site.name}>
+      <span class="brand-mark" aria-hidden="true">AR</span>
+      <span class="brand-name">L’Antica <em>Romagna</em></span>
+    </a>
+
+    <nav class="nav" aria-label="Principal">
+      <ul>
+        {
+          links.map(([key, label]) => (
+            <li>
+              <a href={r[key]} aria-current={key === page ? 'page' : undefined}>
+                {label}
+              </a>
+            </li>
+          ))
+        }
+      </ul>
+    </nav>
+
+    <div class="actions">
+      <div class="lang" role="group" aria-label={t('nav.lang')}>
+        {
+          (Object.keys(languages) as Lang[]).map((l) => (
+            <a
+              href={routes[l][page]}
+              hreflang={l}
+              lang={l}
+              aria-current={l === lang ? 'true' : undefined}
+              data-astro-reload
+            >
+              {languages[l]}
+            </a>
+          ))
+        }
+      </div>
+      <a class="btn btn-primary btn-sm book" href={r.contact + '#reserva'}>{t('nav.book')}</a>
+      <button
+        class="burger"
+        type="button"
+        aria-expanded="false"
+        aria-controls="mobile-nav"
+        data-open-label={t('nav.open')}
+        data-close-label={t('nav.close')}
+        aria-label={t('nav.open')}
+      >
+        <span></span><span></span>
+      </button>
+    </div>
+  </div>
+
+  <div class="mobile-nav" id="mobile-nav" hidden>
+    <nav aria-label="Móvil">
+      <ul>
+        {
+          links.map(([key, label], i) => (
+            <li style={`--i:${i}`}>
+              <a href={r[key]} aria-current={key === page ? 'page' : undefined}>
+                {label}
+              </a>
+            </li>
+          ))
+        }
+      </ul>
+    </nav>
+    <div class="mobile-foot">
+      <a class="btn btn-gold" href={r.contact + '#reserva'}>{t('nav.book')}</a>
+      <a class="ig" href={site.instagram} target="_blank" rel="noopener">
+        <Icon name="instagram" />
+        {site.instagramHandle}
+      </a>
+    </div>
+  </div>
+</header>
+
+<style>
+  .site-header {
+    position: sticky;
+    top: 0;
+    z-index: 50;
+    padding-top: env(safe-area-inset-top, 0px);
+    color: var(--ink);
+    transition:
+      background-color 0.4s var(--ease),
+      box-shadow 0.4s var(--ease),
+      color 0.4s var(--ease);
+  }
+  .site-header::before {
+    content: '';
+    position: absolute;
+    inset: 0;
+    z-index: -1;
+    background: color-mix(in srgb, var(--bg) 82%, transparent);
+    backdrop-filter: saturate(1.4) blur(14px);
+    -webkit-backdrop-filter: saturate(1.4) blur(14px);
+    border-bottom: 1px solid var(--line);
+    transition: opacity 0.4s var(--ease);
+  }
+  /* Variante transparente sobre el hero oscuro */
+  .site-header[data-overlay] {
+    position: fixed;
+    inset-inline: 0;
+    color: var(--on-dark);
+  }
+  .site-header[data-overlay]:not(.is-scrolled):not(.is-open)::before {
+    opacity: 0;
+  }
+  .site-header[data-overlay].is-scrolled,
+  .site-header.is-open {
+    color: var(--ink);
+  }
+  .site-header.is-scrolled {
+    box-shadow: 0 8px 30px -20px rgb(31 26 21 / 0.4);
+  }
+
+  .bar {
+    display: flex;
+    align-items: center;
+    gap: 2rem;
+    height: var(--header-h);
+  }
+  .brand {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.7rem;
+    text-decoration: none;
+    margin-right: auto;
+  }
+  .brand-mark {
+    display: grid;
+    place-items: center;
+    width: 40px;
+    height: 40px;
+    border-radius: 50%;
+    border: 1px solid currentColor;
+    font: italic 500 1.05rem/1 var(--font-display);
+    letter-spacing: 0.02em;
+  }
+  .brand-name {
+    font: 500 1.45rem/1 var(--font-display);
+    letter-spacing: -0.01em;
+    white-space: nowrap;
+  }
+  .brand-name em {
+    color: var(--gold);
+  }
+
+  .nav ul {
+    display: flex;
+    gap: 0.25rem;
+    list-style: none;
+    margin: 0;
+    padding: 0;
+  }
+  .nav a {
+    position: relative;
+    display: block;
+    padding: 0.5rem 0.9rem;
+    font-size: 0.92rem;
+    font-weight: 500;
+    text-decoration: none;
+    opacity: 0.8;
+    transition: opacity 0.25s;
+  }
+  .nav a::after {
+    content: '';
+    position: absolute;
+    left: 0.9rem;
+    right: 0.9rem;
+    bottom: 0.2rem;
+    height: 1px;
+    background: var(--gold);
+    transform: scaleX(0);
+    transform-origin: left;
+    transition: transform 0.35s var(--ease);
+  }
+  .nav a:hover,
+  .nav a[aria-current='page'] {
+    opacity: 1;
+  }
+  .nav a:hover::after,
+  .nav a[aria-current='page']::after {
+    transform: scaleX(1);
+  }
+
+  .actions {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+  }
+  .lang {
+    display: inline-flex;
+    padding: 3px;
+    border: 1px solid color-mix(in srgb, currentColor 22%, transparent);
+    border-radius: 999px;
+  }
+  .lang a {
+    padding: 0.3rem 0.6rem;
+    border-radius: 999px;
+    font-size: 0.72rem;
+    font-weight: 700;
+    letter-spacing: 0.08em;
+    text-decoration: none;
+    opacity: 0.65;
+    transition: all 0.25s;
+  }
+  .lang a:hover {
+    opacity: 1;
+  }
+  .lang a[aria-current='true'] {
+    opacity: 1;
+    background: var(--gold);
+    color: var(--dark);
+  }
+  .site-header[data-overlay]:not(.is-scrolled):not(.is-open) .book {
+    --btn-bg: var(--on-dark);
+    --btn-fg: var(--dark);
+    --btn-bd: var(--on-dark);
+  }
+
+  .burger {
+    display: none;
+    position: relative;
+    width: 44px;
+    height: 44px;
+    border: 1px solid color-mix(in srgb, currentColor 22%, transparent);
+    border-radius: 50%;
+    background: transparent;
+    color: inherit;
+    cursor: pointer;
+  }
+  .burger span {
+    position: absolute;
+    left: 13px;
+    right: 13px;
+    height: 1.5px;
+    background: currentColor;
+    transition: transform 0.35s var(--ease), top 0.35s var(--ease);
+  }
+  .burger span:first-child {
+    top: 17px;
+  }
+  .burger span:last-child {
+    top: 25px;
+  }
+  .is-open .burger span:first-child {
+    top: 21px;
+    transform: rotate(45deg);
+  }
+  .is-open .burger span:last-child {
+    top: 21px;
+    transform: rotate(-45deg);
+  }
+
+  .mobile-nav {
+    position: fixed;
+    inset: calc(var(--header-h) + env(safe-area-inset-top, 0px)) 0 0 0;
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
+    padding: 2rem var(--gutter) calc(2rem + env(safe-area-inset-bottom, 0px));
+    background: var(--bg);
+    overflow-y: auto;
+  }
+  .mobile-nav ul {
+    list-style: none;
+    margin: 0;
+    padding: 0;
+  }
+  .mobile-nav li {
+    border-bottom: 1px solid var(--line);
+    opacity: 0;
+    transform: translateY(12px);
+    animation: item-in 0.5s var(--ease) forwards;
+    animation-delay: calc(var(--i) * 60ms + 60ms);
+  }
+  .mobile-nav li a {
+    display: block;
+    padding: 1rem 0;
+    font: 500 2.3rem/1.1 var(--font-display);
+    text-decoration: none;
+  }
+  .mobile-nav li a[aria-current='page'] {
+    color: var(--gold-ink);
+    font-style: italic;
+  }
+  .mobile-foot {
+    display: grid;
+    gap: 1.25rem;
+    justify-items: start;
+    padding-top: 2rem;
+  }
+  .ig {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.5rem;
+    color: var(--muted);
+    text-decoration: none;
+  }
+  @keyframes item-in {
+    to {
+      opacity: 1;
+      transform: none;
+    }
+  }
+
+  @media (max-width: 960px) {
+    .nav,
+    .book {
+      display: none;
+    }
+    .burger {
+      display: block;
+    }
+  }
+  @media (max-width: 420px) {
+    .brand-mark {
+      display: none;
+    }
+    .brand-name {
+      font-size: 1.3rem;
+    }
+  }
+</style>

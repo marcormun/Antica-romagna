@@ -1,0 +1,151 @@
+---
+import { ClientRouter } from 'astro:transitions';
+import { Font, getImage } from 'astro:assets';
+import Header from '../components/Header.astro';
+import Footer from '../components/Footer.astro';
+import { routes, site, type Lang, type PageKey } from '../i18n/ui';
+import { restaurantSchema } from '../data/schema';
+import ogSource from '../assets/img/stock/horno-lena.webp';
+import '../styles/global.css';
+
+interface Props {
+  lang: Lang;
+  page: PageKey;
+  title: string;
+  description: string;
+  overlayHeader?: boolean;
+  /** Datos estructurados extra de la página (JSON-LD). */
+  schema?: object;
+}
+const { lang, page, title, description, overlayHeader = false, schema } = Astro.props;
+const fullTitle = page === 'home' ? `${title} | ${site.name}` : `${title} | ${site.name} · Martorell`;
+
+// URLs absolutas solo si hay dominio configurado en astro.config.mjs (`site`)
+const base = Astro.site;
+const abs = (path: string) => (base ? new URL(path, base).href : path);
+const canonical = abs(routes[lang][page]);
+
+// Imagen para compartir (WhatsApp, Facebook, Google…), recortada a 1200×630
+const og = await getImage({ src: ogSource, width: 1200, height: 630, fit: 'cover', format: 'jpeg' });
+const ogImage = abs(og.src);
+
+const jsonLd = [restaurantSchema(lang, base, ogImage), ...(schema ? [schema] : [])];
+---
+
+<!doctype html>
+<html lang={lang}>
+  <head>
+    <meta charset="utf-8" />
+    <script is:inline>
+      document.documentElement.classList.add('js');
+      document.addEventListener('astro:after-swap', () => document.documentElement.classList.add('js'));
+    </script>
+    <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+    <meta name="theme-color" content="#1b1612" />
+    <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
+    <link rel="icon" type="image/png" sizes="48x48" href="/favicon-48.png" />
+    <link rel="apple-touch-icon" href="/apple-touch-icon.png" />
+    <meta name="generator" content={Astro.generator} />
+    <title>{fullTitle}</title>
+    <meta name="description" content={description} />
+    {base && <link rel="canonical" href={canonical} />}
+    <link rel="alternate" hreflang="es" href={abs(routes.es[page])} />
+    <link rel="alternate" hreflang="ca" href={abs(routes.ca[page])} />
+    <link rel="alternate" hreflang="x-default" href={abs(routes.es[page])} />
+    {base && <link rel="sitemap" href={abs('/sitemap-index.xml')} />}
+
+    <meta property="og:site_name" content={site.name} />
+    <meta property="og:title" content={fullTitle} />
+    <meta property="og:description" content={description} />
+    <meta property="og:type" content="website" />
+    <meta property="og:url" content={canonical} />
+    <meta property="og:image" content={ogImage} />
+    <meta property="og:image:width" content="1200" />
+    <meta property="og:image:height" content="630" />
+    <meta property="og:locale" content={lang === 'ca' ? 'ca_ES' : 'es_ES'} />
+    <meta property="og:locale:alternate" content={lang === 'ca' ? 'es_ES' : 'ca_ES'} />
+    <meta name="twitter:card" content="summary_large_image" />
+    <meta name="geo.region" content="ES-B" />
+    <meta name="geo.placename" content="Martorell" />
+    <meta name="geo.position" content="41.4762561;1.9137826" />
+    <meta name="ICBM" content="41.4762561, 1.9137826" />
+    <script type="application/ld+json" set:html={JSON.stringify(jsonLd)} />
+    <Font cssVariable="--font-display" preload />
+    <Font cssVariable="--font-sans" preload />
+    <ClientRouter />
+  </head>
+  <body>
+    <a class="skip-link" href="#main">Saltar al contenido</a>
+    <Header lang={lang} page={page} overlay={overlayHeader} />
+    <main id="main">
+      <slot />
+    </main>
+    <Footer lang={lang} />
+
+    <script>
+      let cleanup: Array<() => void> = [];
+
+      function initHeader() {
+        const header = document.querySelector<HTMLElement>('[data-header]');
+        if (!header) return;
+        const burger = header.querySelector<HTMLButtonElement>('.burger');
+        const panel = header.querySelector<HTMLElement>('#mobile-nav');
+
+        const onScroll = () => header.classList.toggle('is-scrolled', window.scrollY > 24);
+        onScroll();
+        window.addEventListener('scroll', onScroll, { passive: true });
+        cleanup.push(() => window.removeEventListener('scroll', onScroll));
+
+        const setOpen = (open: boolean) => {
+          if (!burger || !panel) return;
+          header.classList.toggle('is-open', open);
+          panel.hidden = !open;
+          burger.setAttribute('aria-expanded', String(open));
+          burger.setAttribute('aria-label', open ? burger.dataset.closeLabel! : burger.dataset.openLabel!);
+          document.documentElement.style.overflow = open ? 'hidden' : '';
+        };
+        burger?.addEventListener('click', () => setOpen(burger.getAttribute('aria-expanded') !== 'true'));
+        const onKey = (e: KeyboardEvent) => e.key === 'Escape' && setOpen(false);
+        const onResize = () => window.innerWidth > 960 && setOpen(false);
+        document.addEventListener('keydown', onKey);
+        window.addEventListener('resize', onResize);
+        cleanup.push(() => {
+          document.removeEventListener('keydown', onKey);
+          window.removeEventListener('resize', onResize);
+          document.documentElement.style.overflow = '';
+        });
+      }
+
+      function initReveal() {
+        const items = document.querySelectorAll<HTMLElement>('.reveal:not(.is-in)');
+        if (!('IntersectionObserver' in window)) {
+          items.forEach((el) => el.classList.add('is-in'));
+          return;
+        }
+        const io = new IntersectionObserver(
+          (entries) => {
+            for (const entry of entries) {
+              if (entry.isIntersecting) {
+                entry.target.classList.add('is-in');
+                io.unobserve(entry.target);
+              }
+            }
+          },
+          { rootMargin: '0px 0px -8% 0px', threshold: 0.08 },
+        );
+        items.forEach((el) => io.observe(el));
+        cleanup.push(() => io.disconnect());
+      }
+
+      document.addEventListener('astro:page-load', () => {
+        document.documentElement.classList.add('js');
+        initHeader();
+        initReveal();
+      });
+      document.addEventListener('astro:before-swap', () => {
+        cleanup.forEach((fn) => fn());
+        cleanup = [];
+      });
+    </script>
+  </body>
+</html>

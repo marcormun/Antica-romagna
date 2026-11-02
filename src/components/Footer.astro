@@ -1,0 +1,161 @@
+---
+import Icon from './Icon.astro';
+import { routes, useTranslations, site, hoursTable, type Lang } from '../i18n/ui';
+
+interface Props {
+  lang: Lang;
+}
+const { lang } = Astro.props;
+const t = useTranslations(lang);
+const r = routes[lang];
+const year = new Date().getFullYear();
+---
+
+<footer class="footer section-dark">
+  <div class="container">
+    <div class="top">
+      <div class="brand-col">
+        <p class="brand">L’Antica <em>Romagna</em></p>
+        <p class="muted">{t('tagline')}</p>
+        <a class="btn btn-gold" href={r.contact + '#reserva'}>
+          {t('nav.book')}
+          <Icon name="arrow" />
+        </a>
+      </div>
+
+      <div>
+        <h3 class="col-title">{t('footer.hours')}</h3>
+        <dl class="hours">
+          {
+            hoursTable[lang].map((row) => (
+              <div>
+                <dt>{row.days}</dt>
+                <dd class={row.hours ? '' : 'muted'}>{row.hours ?? t('contact.closed')}</dd>
+              </div>
+            ))
+          }
+        </dl>
+      </div>
+
+      <div>
+        <h3 class="col-title">{t('footer.visit')}</h3>
+        <address>
+          {site.street}<br />
+          {site.city}
+        </address>
+        <a class="foot-link" href={site.mapsUrl} target="_blank" rel="noopener">
+          <Icon name="pin" />
+          {t('contact.directions')}
+        </a>
+        <a class="foot-link" href={site.instagram} target="_blank" rel="noopener">
+          <Icon name="instagram" />
+          {site.instagramHandle}
+        </a>
+      </div>
+    </div>
+
+    <div class="bottom">
+      <span>© {year} {site.name}. {t('footer.rights')}</span>
+      <nav aria-label="Pie">
+        <a href={r.menu}>{t('nav.menu')}</a>
+        <a href={r.contact}>{t('nav.contact')}</a>
+      </nav>
+    </div>
+  </div>
+</footer>
+
+<style>
+  .footer {
+    padding-top: clamp(3.5rem, 7vw, 5.5rem);
+    padding-bottom: calc(2rem + env(safe-area-inset-bottom, 0px));
+  }
+  .top {
+    display: grid;
+    grid-template-columns: 1.3fr 1fr 1fr;
+    gap: clamp(2rem, 5vw, 4rem);
+    padding-bottom: 3rem;
+    border-bottom: 1px solid color-mix(in srgb, var(--on-dark) 14%, transparent);
+  }
+  .brand {
+    font: 500 clamp(2rem, 3.5vw, 2.6rem)/1 var(--font-display);
+    margin-bottom: 0.5rem;
+  }
+  .brand em {
+    color: var(--gold);
+  }
+  .brand-col .btn {
+    margin-top: 1rem;
+  }
+  .col-title {
+    font: 700 0.75rem/1 var(--font-sans);
+    letter-spacing: 0.18em;
+    text-transform: uppercase;
+    color: var(--gold);
+    margin-bottom: 1.25rem;
+  }
+  .hours {
+    margin: 0;
+    display: grid;
+    gap: 0.85rem;
+    font-size: 0.92rem;
+  }
+  .hours dt {
+    font-weight: 600;
+  }
+  .hours dd {
+    margin: 0;
+    color: var(--on-dark-muted);
+    font-variant-numeric: tabular-nums;
+  }
+  address {
+    font-style: normal;
+    font-size: 0.95rem;
+    margin-bottom: 1.25rem;
+  }
+  .foot-link {
+    display: flex;
+    align-items: center;
+    gap: 0.6rem;
+    width: fit-content;
+    margin-bottom: 0.6rem;
+    color: var(--on-dark-muted);
+    text-decoration: none;
+    font-size: 0.92rem;
+    transition: color 0.25s;
+  }
+  .foot-link:hover {
+    color: var(--gold);
+  }
+  .bottom {
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: space-between;
+    gap: 1rem;
+    padding-top: 1.75rem;
+    font-size: 0.82rem;
+    color: var(--on-dark-muted);
+  }
+  .bottom nav {
+    display: flex;
+    gap: 1.5rem;
+  }
+  .bottom a {
+    text-decoration: none;
+  }
+  .bottom a:hover {
+    color: var(--on-dark);
+  }
+  @media (max-width: 860px) {
+    .top {
+      grid-template-columns: 1fr 1fr;
+    }
+    .brand-col {
+      grid-column: 1 / -1;
+    }
+  }
+  @media (max-width: 520px) {
+    .top {
+      grid-template-columns: 1fr;
+    }
+  }
+</style>

@@ -1,0 +1,487 @@
+---
+import { Image } from 'astro:assets';
+import Layout from '../../layouts/Layout.astro';
+import PageHero from '../PageHero.astro';
+import Icon from '../Icon.astro';
+import { useTranslations, site, hoursTable, schedule, type Lang } from '../../i18n/ui';
+// Foto de muestra provisional (Unsplash) — sustituir por la terraza real
+import terraza from '../../assets/img/stock/terraza-noche.webp';
+
+interface Props {
+  lang: Lang;
+}
+const { lang } = Astro.props;
+const t = useTranslations(lang);
+---
+
+<Layout lang={lang} page="contact" title={t('contact.title')} description={t('contact.desc')}>
+  <PageHero kicker={t('contact.kicker')} title={t('contact.h1')} lead={t('contact.lead')}>
+    <p
+      class="status reveal"
+      style="--d:240ms"
+      data-status
+      data-schedule={JSON.stringify(schedule)}
+      data-open={t('contact.openNow')}
+      data-closed={t('contact.closedNow')}
+      hidden
+    >
+      <span class="status-dot"></span><span data-status-text></span>
+    </p>
+  </PageHero>
+
+  <section class="container contact">
+    <div class="info">
+      <div class="block reveal">
+        <h2 class="block-title"><Icon name="clock" /> {t('contact.hours')}</h2>
+        <dl class="hours">
+          {
+            hoursTable[lang].map((row) => (
+              <div>
+                <dt>{row.days}</dt>
+                <dd class={row.hours ? '' : 'muted'}>{row.hours ?? t('contact.closed')}</dd>
+              </div>
+            ))
+          }
+        </dl>
+      </div>
+
+      <div class="block reveal" style="--d:80ms">
+        <h2 class="block-title"><Icon name="pin" /> {t('contact.where')}</h2>
+        <address>
+          {site.street}<br />
+          {site.city}
+        </address>
+        <p class="muted small">{t('contact.note')}</p>
+        <div class="links">
+          <a class="btn btn-outline btn-sm" href={site.mapsUrl} target="_blank" rel="noopener">
+            {t('contact.directions')}
+            <Icon name="arrow" />
+          </a>
+          <a class="btn btn-outline btn-sm" href={site.instagram} target="_blank" rel="noopener">
+            <Icon name="instagram" />
+            {site.instagramHandle}
+          </a>
+        </div>
+      </div>
+
+      <div class="photos reveal" style="--d:120ms">
+        <div class="media">
+          <Image
+            src={terraza}
+            alt={lang === 'ca' ? 'Terrassa al vespre amb llums' : 'Terraza al anochecer con guirnaldas de luces'}
+            widths={[400, 700]}
+            sizes="(max-width: 860px) 46vw, 260px"
+          />
+        </div>
+        <div class="media map">
+          <iframe
+            title={t('contact.mapTitle')}
+            src={site.mapsEmbed}
+            loading="lazy"
+            referrerpolicy="no-referrer-when-downgrade"></iframe>
+        </div>
+      </div>
+    </div>
+
+    <form class="card booking reveal" id="reserva" style="--d:100ms" data-booking novalidate>
+      <p class="kicker">{t('form.kicker')}</p>
+      <h2>{t('form.title')}</h2>
+
+      <div class="grid">
+        <label class="field">
+          <span>{t('form.name')}</span>
+          <input name="name" type="text" autocomplete="name" placeholder={t('form.namePh')} required />
+        </label>
+        <label class="field">
+          <span>{t('form.phone')}</span>
+          <input
+            name="phone"
+            type="tel"
+            autocomplete="tel"
+            inputmode="tel"
+            placeholder="600 000 000"
+            pattern="[0-9 +]{9,15}"
+            required
+          />
+        </label>
+        <label class="field">
+          <span>{t('form.date')}</span>
+          <input name="date" type="date" required data-min-today />
+        </label>
+        <label class="field">
+          <span>{t('form.time')}</span>
+          <select name="time" required>
+            {
+              ['13:00', '13:30', '14:00', '14:30', '15:00', '20:00', '20:30', '21:00', '21:30', '22:00'].map(
+                (h) => <option value={h}>{h}</option>,
+              )
+            }
+          </select>
+        </label>
+      </div>
+
+      <fieldset class="field">
+        <legend>{t('form.pax')}</legend>
+        <div class="pax">
+          {
+            ['1', '2', '3', '4', '5', '6', '8+'].map((n) => (
+              <label>
+                <input type="radio" name="pax" value={n} checked={n === '2'} />
+                <span>{n}</span>
+              </label>
+            ))
+          }
+        </div>
+      </fieldset>
+
+      <label class="field mt">
+        <span>{t('form.note')}</span>
+        <textarea name="note" rows="3" placeholder={t('form.notePh')}></textarea>
+      </label>
+
+      <button class="btn btn-primary submit" type="submit">
+        {t('form.submit')}
+        <Icon name="arrow" />
+      </button>
+      <p class="meta muted">{t('form.meta')}</p>
+
+      <p class="msg msg-error" data-error hidden role="alert">{t('form.error')}</p>
+      <div class="msg msg-ok" data-ok hidden role="status">
+        <Icon name="check" size={22} />
+        <span>{t('form.ok')}</span>
+      </div>
+    </form>
+  </section>
+
+  <script>
+    // TODO: conectar el formulario a un servicio real (email, Formspree, WhatsApp, API propia…).
+    // Si defines un endpoint aquí, la reserva se enviará por POST como JSON.
+    const BOOKING_ENDPOINT = '';
+
+    document.addEventListener('astro:page-load', () => {
+      // Estado "abierto ahora" (hora de Madrid)
+      const status = document.querySelector<HTMLElement>('[data-status]');
+      if (status) {
+        const sched: Record<string, Array<[number, number]>> = JSON.parse(status.dataset.schedule!);
+        const parts = new Intl.DateTimeFormat('en-GB', {
+          timeZone: 'Europe/Madrid',
+          weekday: 'short',
+          hour: '2-digit',
+          minute: '2-digit',
+          hourCycle: 'h23',
+        }).formatToParts(new Date());
+        const get = (type: string) => parts.find((p) => p.type === type)?.value ?? '';
+        const day = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'].indexOf(get('weekday'));
+        const mins = Number(get('hour')) * 60 + Number(get('minute'));
+        const open = (sched[day] ?? []).some(([a, b]) => mins >= a && mins < b);
+        status.classList.toggle('is-open', open);
+        status.querySelector('[data-status-text]')!.textContent = open
+          ? status.dataset.open!
+          : status.dataset.closed!;
+        status.hidden = false;
+      }
+
+      // Formulario
+      const form = document.querySelector<HTMLFormElement>('[data-booking]');
+      if (!form) return;
+      const date = form.querySelector<HTMLInputElement>('[data-min-today]');
+      if (date) {
+        const today = new Date();
+        today.setMinutes(today.getMinutes() - today.getTimezoneOffset());
+        date.min = today.toISOString().slice(0, 10);
+      }
+      const err = form.querySelector<HTMLElement>('[data-error]')!;
+      const ok = form.querySelector<HTMLElement>('[data-ok]')!;
+
+      form.addEventListener('submit', async (e) => {
+        e.preventDefault();
+        form.classList.add('was-validated');
+        if (!form.checkValidity()) {
+          err.hidden = false;
+          form.querySelector<HTMLElement>(':invalid')?.focus();
+          return;
+        }
+        err.hidden = true;
+        const data = Object.fromEntries(new FormData(form));
+        if (BOOKING_ENDPOINT) {
+          await fetch(BOOKING_ENDPOINT, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(data),
+          });
+        } else {
+          console.info('[reserva]', data);
+        }
+        ok.hidden = false;
+        form.reset();
+        form.classList.remove('was-validated');
+      });
+    });
+  </script>
+</Layout>
+
+<style>
+  .status {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.6rem;
+    margin-top: 1.25rem;
+    padding: 0.45rem 1rem;
+    border-radius: 999px;
+    background: var(--surface);
+    border: 1px solid var(--line);
+    font-size: 0.85rem;
+    font-weight: 600;
+  }
+  .status[hidden] {
+    display: none;
+  }
+  .status-dot {
+    width: 8px;
+    height: 8px;
+    border-radius: 50%;
+    background: var(--tomato);
+  }
+  .status.is-open .status-dot {
+    background: var(--basil);
+    box-shadow: 0 0 0 4px rgb(79 107 58 / 0.2);
+  }
+
+  .contact {
+    display: grid;
+    grid-template-columns: 1fr 1.05fr;
+    gap: clamp(2rem, 5vw, 4rem);
+    align-items: start;
+    padding-bottom: var(--section-y);
+  }
+  .block {
+    padding-bottom: 2rem;
+    margin-bottom: 2rem;
+    border-bottom: 1px solid var(--line);
+  }
+  .block-title {
+    display: flex;
+    align-items: center;
+    gap: 0.6rem;
+    font-size: 1.8rem;
+    margin-bottom: 1.25rem;
+  }
+  .block-title :global(svg) {
+    color: var(--gold-ink);
+    width: 22px;
+    height: 22px;
+  }
+  .hours {
+    margin: 0;
+    display: grid;
+  }
+  .hours div {
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: space-between;
+    gap: 0.25rem 1rem;
+    padding: 0.75rem 0;
+    border-bottom: 1px dashed var(--line);
+  }
+  .hours div:last-child {
+    border-bottom: 0;
+  }
+  .hours dt {
+    font-weight: 600;
+  }
+  .hours dd {
+    margin: 0;
+    font-variant-numeric: tabular-nums;
+  }
+  address {
+    font-style: normal;
+    font-size: 1.1rem;
+    margin-bottom: 0.75rem;
+  }
+  .small {
+    font-size: 0.9rem;
+  }
+  .links {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.6rem;
+    margin-top: 1.25rem;
+  }
+
+  .photos {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 0.75rem;
+  }
+  .photos .media {
+    aspect-ratio: 1;
+    border-radius: var(--radius);
+  }
+  .map iframe {
+    width: 100%;
+    height: 100%;
+    border: 0;
+    filter: grayscale(0.4) sepia(0.15);
+  }
+
+  /* formulario */
+  .booking {
+    position: sticky;
+    top: calc(var(--header-h) + 1.5rem);
+    box-shadow: var(--shadow);
+  }
+  .booking h2 {
+    font-size: clamp(1.9rem, 3vw, 2.4rem);
+  }
+  .grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 1rem;
+  }
+  .field {
+    display: grid;
+    gap: 0.4rem;
+    margin: 0;
+    padding: 0;
+    border: 0;
+    min-width: 0;
+  }
+  fieldset.field,
+  .field.mt {
+    margin-top: 1.1rem;
+  }
+  .field > span,
+  .field legend {
+    font-size: 0.8rem;
+    font-weight: 600;
+    color: var(--muted);
+    padding: 0;
+    margin-bottom: 0.4rem;
+  }
+  input:not([type='radio']),
+  select,
+  textarea {
+    width: 100%;
+    min-height: 48px;
+    padding: 0.7rem 0.9rem;
+    font: inherit;
+    font-size: 1rem; /* evita el zoom en iOS */
+    color: var(--ink);
+    background: var(--bg);
+    border: 1px solid var(--line);
+    border-radius: var(--radius-sm);
+    transition: border-color 0.2s, box-shadow 0.2s, background-color 0.2s;
+    appearance: none;
+  }
+  select {
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='8' fill='none' stroke='%236a5f55' stroke-width='1.6'%3E%3Cpath d='m1 1.5 5 5 5-5'/%3E%3C/svg%3E");
+    background-repeat: no-repeat;
+    background-position: right 0.9rem center;
+    padding-right: 2.25rem;
+  }
+  textarea {
+    resize: vertical;
+    min-height: 96px;
+  }
+  input:hover,
+  select:hover,
+  textarea:hover {
+    border-color: color-mix(in srgb, var(--ink) 35%, transparent);
+  }
+  input:focus,
+  select:focus,
+  textarea:focus {
+    outline: none;
+    background: var(--surface);
+    border-color: var(--gold);
+    box-shadow: 0 0 0 4px rgb(192 138 62 / 0.18);
+  }
+  .was-validated :invalid {
+    border-color: var(--tomato);
+  }
+
+  .pax {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.5rem;
+  }
+  .pax label {
+    position: relative;
+  }
+  .pax input {
+    position: absolute;
+    opacity: 0;
+    inset: 0;
+    margin: 0;
+    cursor: pointer;
+  }
+  .pax span {
+    display: grid;
+    place-items: center;
+    min-width: 48px;
+    height: 48px;
+    padding-inline: 0.75rem;
+    border: 1px solid var(--line);
+    border-radius: 999px;
+    font-weight: 600;
+    transition: all 0.2s var(--ease);
+  }
+  .pax label:hover span {
+    border-color: var(--ink);
+  }
+  .pax input:checked + span {
+    background: var(--ink);
+    border-color: var(--ink);
+    color: var(--on-dark);
+  }
+  .pax input:focus-visible + span {
+    outline: 2px solid var(--gold);
+    outline-offset: 2px;
+  }
+
+  .submit {
+    width: 100%;
+    margin-top: 1.5rem;
+  }
+  .meta {
+    margin: 0.75rem 0 0;
+    font-size: 0.82rem;
+    text-align: center;
+  }
+  .msg {
+    margin: 1rem 0 0;
+    padding: 0.9rem 1rem;
+    border-radius: var(--radius-sm);
+    font-size: 0.92rem;
+  }
+  .msg-error {
+    background: rgb(178 67 43 / 0.08);
+    color: var(--tomato);
+  }
+  .msg-ok {
+    display: flex;
+    gap: 0.6rem;
+    align-items: center;
+    background: rgb(79 107 58 / 0.1);
+    color: var(--basil);
+    font-weight: 600;
+  }
+  .msg-ok[hidden] {
+    display: none;
+  }
+
+  @media (max-width: 900px) {
+    .contact {
+      grid-template-columns: 1fr;
+    }
+    .booking {
+      position: static;
+      order: -1;
+    }
+  }
+  @media (max-width: 460px) {
+    .grid {
+      grid-template-columns: 1fr;
+    }
+  }
+</style>
