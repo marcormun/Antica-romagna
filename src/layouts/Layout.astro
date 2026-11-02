@@ -3,7 +3,7 @@ import { ClientRouter } from 'astro:transitions';
 import { Font, getImage } from 'astro:assets';
 import Header from '../components/Header.astro';
 import Footer from '../components/Footer.astro';
-import { routes, site, type Lang, type PageKey } from '../i18n/ui';
+import { routes, site, withBase, type Lang, type PageKey } from '../i18n/ui';
 import { restaurantSchema } from '../data/schema';
 import ogSource from '../assets/img/stock/horno-lena.webp';
 import '../styles/global.css';
@@ -42,9 +42,9 @@ const jsonLd = [restaurantSchema(lang, base, ogImage), ...(schema ? [schema] : [
     </script>
     <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
     <meta name="theme-color" content="#1b1612" />
-    <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
-    <link rel="icon" type="image/png" sizes="48x48" href="/favicon-48.png" />
-    <link rel="apple-touch-icon" href="/apple-touch-icon.png" />
+    <link rel="icon" type="image/svg+xml" href={withBase('/favicon.svg')} />
+    <link rel="icon" type="image/png" sizes="48x48" href={withBase('/favicon-48.png')} />
+    <link rel="apple-touch-icon" href={withBase('/apple-touch-icon.png')} />
     <meta name="generator" content={Astro.generator} />
     <title>{fullTitle}</title>
     <meta name="description" content={description} />
@@ -52,7 +52,7 @@ const jsonLd = [restaurantSchema(lang, base, ogImage), ...(schema ? [schema] : [
     <link rel="alternate" hreflang="es" href={abs(routes.es[page])} />
     <link rel="alternate" hreflang="ca" href={abs(routes.ca[page])} />
     <link rel="alternate" hreflang="x-default" href={abs(routes.es[page])} />
-    {base && <link rel="sitemap" href={abs('/sitemap-index.xml')} />}
+    {base && <link rel="sitemap" href={abs(withBase('/sitemap-index.xml'))} />}
 
     <meta property="og:site_name" content={site.name} />
     <meta property="og:title" content={fullTitle} />

@@ -1,4 +1,4 @@
-import { routes, site, ui, type Lang } from '../i18n/ui';
+import { routes, site, ui, withBase, type Lang } from '../i18n/ui';
 import { menu, tr } from './menu';
 
 /** Coordenadas de la ficha de Google Maps. */
@@ -11,7 +11,7 @@ export function restaurantSchema(lang: Lang, base: URL | undefined, image?: stri
   return {
     '@context': 'https://schema.org',
     '@type': 'Restaurant',
-    '@id': abs('/#restaurant', base),
+    '@id': abs(withBase('/#restaurant'), base),
     name: site.name,
     alternateName: 'Pizzeria L’Antica Romagna',
     description: ui[lang]['home.desc'],

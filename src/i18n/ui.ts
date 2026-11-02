@@ -2,10 +2,13 @@ export const languages = { es: 'ES', ca: 'CA' } as const;
 export type Lang = keyof typeof languages;
 export type PageKey = 'home' | 'menu' | 'contact';
 
+/** Antepone el `base` de astro.config.mjs (p. ej. '/Antica-romagna') a una ruta absoluta. */
+export const withBase = (path: string) => import.meta.env.BASE_URL.replace(/\/$/, '') + path;
+
 /** Rutas de cada página en cada idioma (el castellano va sin prefijo). */
 export const routes: Record<Lang, Record<PageKey, string>> = {
-  es: { home: '/', menu: '/carta/', contact: '/contacto/' },
-  ca: { home: '/ca/', menu: '/ca/carta/', contact: '/ca/contacte/' },
+  es: { home: withBase('/'), menu: withBase('/carta/'), contact: withBase('/contacto/') },
+  ca: { home: withBase('/ca/'), menu: withBase('/ca/carta/'), contact: withBase('/ca/contacte/') },
 };
 
 export const site = {

@@ -3,13 +3,17 @@ import { defineConfig, fontProviders } from 'astro/config';
 
 import sitemap from '@astrojs/sitemap';
 
-// TODO: pon aquí el dominio definitivo (p. ej. 'https://www.lanticaromagna.es').
-// Sin él no se generan la URL canónica, el sitemap ni las URLs absolutas de hreflang/og:image.
-const SITE = '';
+// Publicada en GitHub Pages: https://marcormun.github.io/Antica-romagna/
+// Si más adelante usas un dominio propio (p. ej. 'https://www.lanticaromagna.es'),
+// cambia SITE por ese dominio y deja BASE en '/'.
+const SITE = 'https://marcormun.github.io';
+const BASE = '/Antica-romagna';
 
 // https://astro.build/config
 export default defineConfig({
   site: SITE || undefined,
+  base: BASE,
+  trailingSlash: 'always',
 
   i18n: {
     defaultLocale: 'es',
