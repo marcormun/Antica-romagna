@@ -22,3 +22,7 @@ pnpm-debug.log*
 
 # jetbrains setting folder
 .idea/
+
+# impeccable: binario del motor (se descarga al usarlo) y ajustes locales de Claude Code
+**/skills/impeccable/scripts/bin/
+.claude/settings.local.json
