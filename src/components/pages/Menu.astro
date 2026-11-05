@@ -1,6 +1,5 @@
 ---
 import Layout from '../../layouts/Layout.astro';
-import PageHero from '../PageHero.astro';
 import Icon from '../Icon.astro';
 import { routes, useTranslations, type Lang } from '../../i18n/ui';
 import { menu, tr } from '../../data/menu';
@@ -15,7 +14,10 @@ const r = routes[lang];
 ---
 
 <Layout lang={lang} page="menu" title={t('menu.seoTitle')} description={t('menu.desc')} schema={menuSchema(lang, Astro.site)}>
-  <PageHero kicker={t('tagline')} title={t('menu.title')} lead={t('menu.lead')} />
+  <header class="container menu-head">
+    <h1>{t('menu.title')}</h1>
+    <p class="lead muted">{t('menu.lead')}</p>
+  </header>
 
   <nav class="cats" aria-label={t('menu.jump')} data-cats>
     <div class="container">
@@ -37,36 +39,42 @@ const r = routes[lang];
     {
       menu.map((section) => (
         <section id={section.id} class="menu-section" data-section>
-          <div class="sec-head reveal">
+          <div class="sec-head">
             <h2>{tr(section.title, lang)}</h2>
+            {section.twoPrices && (
+              <div class="price-cols" aria-hidden="true">
+                <span>{t('menu.round')}</span>
+                <span>{t('menu.half')}</span>
+              </div>
+            )}
           </div>
 
           {section.twoPrices ? (
             <ul class="pizzas">
               {section.items.map((item) => (
-                <li class="pizza reveal">
-                  <div class="pizza-top">
-                    <h3>{tr(item.name, lang)}</h3>
-                    {item.tag && <span class="pill">{tr(item.tag, lang)}</span>}
+                <li class="pizza">
+                  <div class="pizza-text">
+                    <h3>
+                      {tr(item.name, lang)}
+                      {item.tag && <em class="tag">{tr(item.tag, lang)}</em>}
+                    </h3>
+                    <p class="desc muted">{tr(item.desc, lang)}</p>
                   </div>
-                  <p class="desc muted">{tr(item.desc, lang)}</p>
-                  <div class="pizza-prices">
-                    <span>
-                      <small>{t('menu.round')}</small>
-                      {item.price} €
-                    </span>
-                    <span>
-                      <small>{t('menu.half')}</small>
-                      {item.half} €
-                    </span>
-                  </div>
+                  <span class="p">
+                    <span class="sr-only">{t('menu.round')}: </span>
+                    {item.price} €
+                  </span>
+                  <span class="p">
+                    <span class="sr-only">{t('menu.half')}: </span>
+                    {item.half} €
+                  </span>
                 </li>
               ))}
             </ul>
           ) : (
             <ul class="dishes">
               {section.items.map((item) => (
-                <li class="dish reveal">
+                <li class="dish">
                   <div class="row">
                     <h3 class="name">{tr(item.name, lang)}</h3>
                     <span class="dots" />
@@ -83,12 +91,12 @@ const r = routes[lang];
 
     <p class="footnote muted">{t('menu.footnote')}</p>
 
-    <aside class="menu-cta reveal">
+    <aside class="menu-cta">
       <div>
         <h2>{t('menu.ctaTitle')}</h2>
         <p class="muted">{t('menu.ctaText')}</p>
       </div>
-      <a class="btn btn-gold" href={r.contact + '#reserva'}>
+      <a class="btn btn-primary" href={r.contact + '#reserva'}>
         {t('nav.book')}
         <Icon name="arrow" />
       </a>
@@ -112,7 +120,12 @@ const r = routes[lang];
       bar.querySelectorAll<HTMLAnchorElement>('[data-cat]').forEach((a) => links.set(a.dataset.cat!, a));
 
       const setActive = (id: string) => {
-        links.forEach((a, key) => a.classList.toggle('is-active', key === id));
+        links.forEach((a, key) => {
+          const on = key === id;
+          a.classList.toggle('is-active', on);
+          if (on) a.setAttribute('aria-current', 'location');
+          else a.removeAttribute('aria-current');
+        });
         const a = links.get(id);
         const list = bar.querySelector('ul');
         if (a && list) {
@@ -141,47 +154,62 @@ const r = routes[lang];
 </Layout>
 
 <style>
-  /* ── barra de categorías ── */
+  /* ── cabecera: alineada con la carta, sin adornos ── */
+  .menu-head {
+    max-width: 1080px;
+    padding-top: clamp(3rem, 7vw, 5.5rem);
+    padding-bottom: clamp(1.5rem, 3vw, 2.25rem);
+  }
+  .menu-head h1 {
+    margin-bottom: 0.75rem;
+  }
+  .menu-head .lead {
+    max-width: 52ch;
+    margin: 0;
+  }
+
+  /* ── índice de secciones ── */
   .cats {
     position: sticky;
     top: calc(var(--header-h) + env(safe-area-inset-top, 0px));
     z-index: 20;
-    background: color-mix(in srgb, var(--bg) 90%, transparent);
-    backdrop-filter: blur(12px);
-    -webkit-backdrop-filter: blur(12px);
+    background: var(--bg);
     border-bottom: 1px solid var(--line);
+  }
+  .cats .container {
+    max-width: 1080px;
   }
   .cats ul {
     display: flex;
-    gap: 0.5rem;
+    gap: clamp(1.25rem, 3vw, 2.25rem);
     margin: 0;
-    padding: 0.75rem 0;
+    padding: 0;
     list-style: none;
     overflow-x: auto;
     scrollbar-width: none;
-    justify-content: safe center;
   }
   .cats ul::-webkit-scrollbar {
     display: none;
   }
   .cats a {
     display: block;
-    padding: 0.5rem 1rem;
-    border: 1px solid var(--line);
-    border-radius: 999px;
-    font-size: 0.875rem;
+    padding: 0.95rem 0 0.8rem;
+    border-bottom: 2px solid transparent;
+    font-size: 0.92rem;
     font-weight: 600;
+    color: var(--muted);
     text-decoration: none;
     white-space: nowrap;
-    transition: all 0.3s var(--ease);
+    transition:
+      color 0.25s var(--ease),
+      border-color 0.25s var(--ease);
   }
   .cats a:hover {
-    border-color: var(--ink);
+    color: var(--ink);
   }
   .cats a.is-active {
-    background: var(--ink);
-    border-color: var(--ink);
-    color: var(--on-dark);
+    color: var(--ink);
+    border-color: var(--gold);
   }
 
   /* ── secciones ── */
@@ -193,7 +221,7 @@ const r = routes[lang];
     padding-top: clamp(3rem, 6vw, 4.5rem);
     /* Se suma al scroll-padding del html (cabecera + 1rem): el total deja la
        sección justo debajo de la barra de categorías. */
-    scroll-margin-top: calc(var(--cats-h, 62px) - 1rem);
+    scroll-margin-top: calc(var(--cats-h, 52px) - 1rem);
   }
   .sec-head {
     display: flex;
@@ -232,7 +260,8 @@ const r = routes[lang];
     border-bottom: 1px dotted color-mix(in srgb, var(--ink) 30%, transparent);
     transform: translateY(-4px);
   }
-  .price {
+  .price,
+  .p {
     font-weight: 600;
     font-variant-numeric: tabular-nums;
     color: var(--gold-ink);
@@ -244,68 +273,55 @@ const r = routes[lang];
     line-height: 1.55;
   }
 
-  /* pizzas */
+  /* ── pizzas: tabla de carta con dos columnas de precio ── */
+  .pizzas,
+  .price-cols {
+    --col: 6.5rem;
+  }
+  .price-cols {
+    display: grid;
+    grid-template-columns: var(--col) var(--col);
+    text-align: right;
+    font-size: 0.85rem;
+    font-weight: 600;
+    color: var(--muted);
+  }
   .pizzas {
     list-style: none;
     margin: 0;
     padding: 0;
-    display: grid;
-    grid-template-columns: repeat(auto-fill, minmax(min(100%, 300px), 1fr));
-    gap: 1rem;
   }
   .pizza {
-    display: flex;
-    flex-direction: column;
-    padding: 1.4rem 1.4rem 1.2rem;
-    background: var(--surface);
-    border: 1px solid var(--line);
-    border-radius: var(--radius);
-    transition: transform 0.4s var(--ease), box-shadow 0.4s var(--ease), border-color 0.4s;
+    display: grid;
+    grid-template-columns: 1fr var(--col) var(--col);
+    align-items: baseline;
+    padding-block: 1.1rem;
+    border-bottom: 1px solid var(--line);
   }
-  .pizza:hover {
-    transform: translateY(-3px);
-    box-shadow: var(--shadow);
-    border-color: color-mix(in srgb, var(--gold) 45%, transparent);
+  .pizza:first-child {
+    padding-top: 0;
   }
-  .pizza-top {
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-    gap: 0.75rem;
+  .pizza-text {
+    max-width: 60ch;
   }
   .pizza h3 {
     margin: 0;
-    font-size: 1.6rem;
+    font-size: 1.55rem;
+    line-height: 1.15;
   }
-  .pizza .desc {
-    flex: 1;
-    margin: 0.4rem 0 1.1rem;
+  .tag {
+    margin-left: 0.6rem;
+    font: italic 400 1rem/1 var(--font-display);
+    color: var(--tomato);
+    white-space: nowrap;
   }
-  .pizza-prices {
-    display: grid;
-    grid-template-columns: 1fr 1fr;
-    gap: 0.5rem;
-    padding-top: 0.9rem;
-    border-top: 1px dashed var(--line);
-  }
-  .pizza-prices span {
-    display: flex;
-    flex-direction: column;
-    font-weight: 700;
-    font-variant-numeric: tabular-nums;
-    color: var(--gold-ink);
+  .pizza .p {
+    text-align: right;
     font-size: 1.05rem;
-  }
-  .pizza-prices small {
-    font-size: 0.68rem;
-    font-weight: 700;
-    letter-spacing: 0.1em;
-    text-transform: uppercase;
-    color: var(--muted);
   }
 
   .footnote {
-    margin-top: 1rem;
+    margin-top: 2rem;
     font-size: 0.85rem;
   }
 
@@ -315,24 +331,36 @@ const r = routes[lang];
     align-items: center;
     justify-content: space-between;
     gap: 1.5rem;
-    margin-top: clamp(3rem, 6vw, 5rem);
-    padding: clamp(2rem, 4vw, 3rem);
-    border-radius: var(--radius-lg);
-    background: var(--dark);
-    color: var(--on-dark);
+    margin-top: clamp(3rem, 6vw, 4.5rem);
+    padding-top: clamp(2rem, 4vw, 2.75rem);
+    border-top: 1px solid var(--ink);
   }
   .menu-cta h2 {
     margin-bottom: 0.25rem;
   }
   .menu-cta p {
     margin: 0;
-    color: var(--on-dark-muted);
   }
 
   @media (max-width: 760px) {
     .dishes {
       grid-template-columns: 1fr;
       gap: 1.4rem;
+    }
+    .pizzas,
+    .price-cols {
+      --col: 4.6rem;
+    }
+    .pizza h3 {
+      font-size: 1.35rem;
+    }
+    .tag {
+      display: block;
+      margin: 0.2rem 0 0;
+      font-size: 0.95rem;
+    }
+    .pizza .p {
+      font-size: 0.95rem;
     }
   }
 </style>

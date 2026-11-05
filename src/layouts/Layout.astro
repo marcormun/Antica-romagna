@@ -80,7 +80,7 @@ const jsonLd = [restaurantSchema(lang, base, ogImage), ...(schema ? [schema] : [
     <main id="main">
       <slot />
     </main>
-    <Footer lang={lang} />
+    <Footer lang={lang} showHours={page !== 'home'} />
 
     <script>
       let cleanup: Array<() => void> = [];

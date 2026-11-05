@@ -4,8 +4,10 @@ import { routes, useTranslations, site, hoursTable, type Lang } from '../i18n/ui
 
 interface Props {
   lang: Lang;
+  /** La portada ya muestra el horario en el hero; ahí el pie no lo repite. */
+  showHours?: boolean;
 }
-const { lang } = Astro.props;
+const { lang, showHours = true } = Astro.props;
 const t = useTranslations(lang);
 const r = routes[lang];
 const year = new Date().getFullYear();
@@ -13,7 +15,7 @@ const year = new Date().getFullYear();
 
 <footer class="footer section-dark">
   <div class="container">
-    <div class="top">
+    <div class:list={['top', { 'no-hours': !showHours }]}>
       <div class="brand-col">
         <p class="brand">L’Antica <em>Romagna</em></p>
         <p class="muted">{t('tagline')}</p>
@@ -23,19 +25,21 @@ const year = new Date().getFullYear();
         </a>
       </div>
 
-      <div>
-        <h3 class="col-title">{t('footer.hours')}</h3>
-        <dl class="hours">
-          {
-            hoursTable[lang].map((row) => (
-              <div>
-                <dt>{row.days}</dt>
-                <dd class={row.hours ? '' : 'muted'}>{row.hours ?? t('contact.closed')}</dd>
-              </div>
-            ))
-          }
-        </dl>
-      </div>
+      {
+        showHours && (
+          <div>
+            <h3 class="col-title">{t('footer.hours')}</h3>
+            <dl class="hours">
+              {hoursTable[lang].map((row) => (
+                <div>
+                  <dt>{row.days}</dt>
+                  <dd class={row.hours ? '' : 'muted'}>{row.hours ?? t('contact.closed')}</dd>
+                </div>
+              ))}
+            </dl>
+          </div>
+        )
+      }
 
       <div>
         <h3 class="col-title">{t('footer.visit')}</h3>
@@ -75,6 +79,9 @@ const year = new Date().getFullYear();
     gap: clamp(2rem, 5vw, 4rem);
     padding-bottom: 3rem;
     border-bottom: 1px solid color-mix(in srgb, var(--on-dark) 14%, transparent);
+  }
+  .top.no-hours {
+    grid-template-columns: 2.3fr 1fr;
   }
   .brand {
     font: 500 clamp(2rem, 3.5vw, 2.6rem)/1 var(--font-display);
